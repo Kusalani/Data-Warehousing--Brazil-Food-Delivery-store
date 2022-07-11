@@ -1,0 +1,170 @@
+
+drop table DimPayments
+create table DimPayments(
+PaymentsSK int identity(1,1) primary key,
+AlternatePayment_order_id int,
+payment_amount float,
+payment_fee float,
+payment_method nvarchar(50),
+payment_status nvarchar(50),
+Address1 nvarchar(50),
+city nvarchar(50),
+state nvarchar(50),
+zip nvarchar(50),
+StartDate Datetime,
+EndDate dateTime,
+InsertDate Datetime,
+ModifiedDate Datetime
+)
+
+drop table DimChannels
+create table DimChannels(
+ChannelsSK int identity(1,1) primary key,
+AlternateChannel_id int,
+channel_name nvarchar(50),
+channel_type nvarchar(50),
+InsertDate Datetime,
+ModifiedDate Datetime
+
+
+)
+drop table DimStores
+create table DimStores(
+StoresSK int identity(1,1) primary key,
+AlternateStore_id int,
+store_name nvarchar(50),
+store_segment nvarchar(50),
+store_plan nvarchar(50),
+Insertdate Datetime,
+ModifiedDate Datetime
+
+
+)
+
+
+
+create table DimDeliveries(
+
+DeliveriesSK int identity(1,1) primary key,
+AlternateDelivery_id int,
+
+
+delivery_distance int,
+delivery_status nvarchar(50),
+DeliveryDriversKey int foreign key references DimDeliveryDrivers(DeliveryDriversSK),
+InsertDate datetime,
+ModifiedDate datetime
+
+)
+
+create table DimDeliveryDrivers(
+DeliveryDriversSK int identity(1,1) primary key,
+AlternateDriver_id int,
+
+driver_modal nvarchar(50),
+driver_type nvarchar(50),
+InsertDate	DateTime,
+ModifiedDate DateTime
+)
+
+
+drop table DimDeliveryDrivers 
+drop table DimDeliveries
+drop table FactOrders
+
+create table FactOrders(
+order_id int,
+order_amount float,
+order_status nvarchar(50),
+Store_id int,
+store_name nvarchar(50),
+store_segment nvarchar(50),
+store_plan_price nvarchar(50),
+
+
+
+
+order_moment_createdDateKey int foreign key references DimDate(DateKey),
+order_moment_acceptedDateKey int foreign key references DimDate(DateKey),
+order_moment_collectedDateKey int foreign key references DimDate(DateKey),
+order_moment_deliveringDateKey int foreign key references DimDate(DateKey),
+order_moment_finishedDateKey int foreign key references DimDate(DateKey),
+
+
+
+DeliveriesKey int foreign key references DimDeliveries(DeliveriesSK),
+PaymentKey int foreign key references DimPayments (PaymentsSK),
+
+InsertDate	DateTime,
+ModifiedDate DateTime
+
+)
+
+
+  select * from DimDeliveryDrivers
+
+CREATE PROCEDURE dbo.UpdateDimDeliveryDrivers
+@Driver_id int,
+@driver_modal nvarchar(50),
+@driver_type nvarchar(50)
+
+AS
+BEGIN
+if not exists (select DeliveryDriversSK
+from dbo.DimDeliveryDrivers
+where AlternateDriver_id = @Driver_id)
+BEGIN
+insert into dbo.DimDeliveryDrivers
+(AlternateDriver_id,  driver_modal, driver_type, InsertDate, ModifiedDate)
+values
+(@Driver_id,  @driver_modal, @driver_type,  GETDATE(), GETDATE())
+END;
+if exists (select DeliveryDriversSK
+from dbo.DimDeliveryDrivers
+where AlternateDriver_id = @Driver_id)
+BEGIN
+update dbo.DimDeliveryDrivers
+set driver_modal = @driver_modal,
+driver_type = @driver_type,
+ModifiedDate = GETDATE()
+where AlternateDriver_id = @Driver_id
+END;
+END;
+
+CREATE PROCEDURE dbo.UpdateDimDeliveries
+@delivery_id int,
+
+@delivery_distance int,
+@delivery_status nvarchar(50),
+@DeliveryDriversKey int
+AS
+BEGIN
+if not exists (select DeliveriesSK from dbo.DimDeliveries where AlternateDelivery_id = @Delivery_id)
+BEGIN
+insert into dbo.DimDeliveries (AlternateDelivery_id, delivery_distance, delivery_status, DeliveryDriversKey, InsertDate, ModifiedDate)
+values(@delivery_id, @delivery_distance, @delivery_status, @DeliveryDriversKey, GETDATE(), GETDATE())
+END;
+if exists (select DeliveriesSK from dbo.DimDeliveries where AlternateDelivery_id = @delivery_id)
+BEGIN
+update dbo.DimDeliveries
+set delivery_distance = @delivery_distance, delivery_status = @delivery_status,  DeliveryDriversKey = @DeliveryDriversKey, ModifiedDate = GETDATE()
+where AlternateDelivery_id = @Delivery_id
+END;
+END;
+
+
+
+
+
+
+select COUNT (*) from StgOrders
+select COUNT (*) from StgPayments
+select COUNT (*) from StgStores
+select* from StgChannels
+select COUNT (*) from StgDeliveries
+select COUNT (*) from StgDeliveryDrivers
+
+select COUNT (*) from StgCustomerDetails
+
+
+select * from DimDeliveries
